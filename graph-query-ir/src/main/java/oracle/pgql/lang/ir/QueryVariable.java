@@ -16,9 +16,16 @@ public abstract class QueryVariable {
 
   protected boolean anonymous;
 
-  public QueryVariable(String name, boolean anonymous) {
+  protected String uniqueIdentifier; // an identifier that is unique throughout the query (note: variable names are not)
+
+  public QueryVariable(String name, String uniqueIdentifier, boolean anonymous) {
     this.name = name;
+    this.uniqueIdentifier = uniqueIdentifier;
     this.anonymous = anonymous;
+  }
+
+  public QueryVariable(String name, boolean anonymous) {
+    this(name, name, false);
   }
 
   public QueryVariable(String name) {
@@ -39,6 +46,14 @@ public abstract class QueryVariable {
 
   public void setAnonymous(boolean anonymous) {
     this.anonymous = anonymous;
+  }
+
+  public void setUniqueIdentifier(String uniqueIdentifier) {
+    this.uniqueIdentifier = uniqueIdentifier;
+  }
+
+  public String getUniqueIdentifier() {
+    return uniqueIdentifier;
   }
 
   public abstract VariableType getVariableType();
@@ -62,8 +77,12 @@ public abstract class QueryVariable {
     if (name == null) {
       if (other.name != null)
         return false;
-    } else if (!name.equals(other.name))
+    }
+    if (!name.equals(other.name))
       return false;
+    else if (!uniqueIdentifier.equals(other.uniqueIdentifier)) {
+      return false;
+    }
     return true;
   }
 

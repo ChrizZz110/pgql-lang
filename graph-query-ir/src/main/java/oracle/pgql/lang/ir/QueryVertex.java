@@ -3,10 +3,15 @@
  */
 package oracle.pgql.lang.ir;
 
-public class QueryVertex extends QueryVariable {
+public class QueryVertex extends GraphPatternElement {
 
   public QueryVertex(String name, boolean anonymous) {
-    super(name, anonymous);
+    this(name, name, anonymous, null);
+  }
+
+  public QueryVertex(String name, String uniqueIdentifier, boolean anonymous,
+      QueryVariable correlationVariableFromOuterQuery) {
+    super(name, uniqueIdentifier, anonymous, correlationVariableFromOuterQuery);
   }
 
   @Override
@@ -25,19 +30,7 @@ public class QueryVertex extends QueryVariable {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-
-    QueryVariable that = (QueryVariable) o;
-
-    if (anonymous != that.anonymous) {
-      return false;
-    }
-    return name.equals(that.name);
+    return super.equals(o);
   }
 
   @Override

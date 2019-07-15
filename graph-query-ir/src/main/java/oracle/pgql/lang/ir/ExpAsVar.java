@@ -36,7 +36,25 @@ public class ExpAsVar extends QueryVariable {
    *          true if in SELECT, false if in GROUP BY
    */
   public ExpAsVar(QueryExpression exp, String name, boolean anonymous, boolean isContainedInSelectClause) {
-    super(name, anonymous);
+    this(exp, name, name, anonymous, isContainedInSelectClause);
+  }
+
+  /**
+   * @param exp
+   *          an expression
+   * @param name
+   *          the name with which the the element can be referred to in the result set
+   * @param a
+   *          unique identifier for this variable (note: the variable name may not be unique within the query)
+   * @param anonymous
+   *          false if the name was provided via the query (i.e. exp AS name), true if the name was not provided via the
+   *          query (i.e. exp) but via some other mechanism
+   * @param isContainedInSelectClause
+   *          true if in SELECT, false if in GROUP BY
+   */
+  public ExpAsVar(QueryExpression exp, String name, String uniqueIdentifier, boolean anonymous,
+      boolean isContainedInSelectClause) {
+    super(name, uniqueIdentifier, anonymous);
     this.exp = exp;
     this.isContainedInSelectClause = isContainedInSelectClause;
   }

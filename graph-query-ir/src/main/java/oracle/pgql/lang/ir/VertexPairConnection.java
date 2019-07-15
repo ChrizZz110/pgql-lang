@@ -3,7 +3,7 @@
  */
 package oracle.pgql.lang.ir;
 
-public abstract class VertexPairConnection extends QueryVariable {
+public abstract class VertexPairConnection extends GraphPatternElement {
 
   protected QueryVertex src;
 
@@ -12,7 +12,12 @@ public abstract class VertexPairConnection extends QueryVariable {
   protected Direction direction;
 
   public VertexPairConnection(QueryVertex src, QueryVertex dst, String name, boolean anonymous, Direction direction) {
-    super(name, anonymous);
+    this(src, dst, name, name, anonymous, direction, null);
+  }
+
+  public VertexPairConnection(QueryVertex src, QueryVertex dst, String name, String uniqueIdentifier, boolean anonymous,
+      Direction direction, QueryVariable correlationVariableFromOuterQuery) {
+    super(name, uniqueIdentifier, anonymous, correlationVariableFromOuterQuery);
     this.src = src;
     this.dst = dst;
     this.direction = direction;

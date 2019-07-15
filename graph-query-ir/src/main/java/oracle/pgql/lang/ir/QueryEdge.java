@@ -9,6 +9,11 @@ public class QueryEdge extends VertexPairConnection {
     super(src, dst, name, anonymous, direction);
   }
 
+  public QueryEdge(QueryVertex src, QueryVertex dst, String name, String uniqueIdentifier, boolean anonymous, Direction direction,
+      QueryVariable correlationVariableFromOuterQuery) {
+    super(src, dst, name, uniqueIdentifier, anonymous, direction, correlationVariableFromOuterQuery);
+  }
+
   @Override
   public VariableType getVariableType() {
     return VariableType.EDGE;

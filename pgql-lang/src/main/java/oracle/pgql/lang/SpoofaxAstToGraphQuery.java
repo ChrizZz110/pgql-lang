@@ -131,12 +131,14 @@ public class SpoofaxAstToGraphQuery {
 
   private static final int POS_VERTEX_NAME = 0;
   private static final int POS_VERTEX_ORIGIN_OFFSET = 1;
+  private static final int POS_VERTEX_CORRELATION = 2;
 
   private static final int POS_EDGE_SRC = 0;
   private static final int POS_EDGE_NAME = 1;
   private static final int POS_EDGE_DST = 2;
   private static final int POS_EDGE_DIRECTION = 3;
   private static final int POS_EDGE_ORIGIN_OFFSET = 4;
+  private static final int POS_EDGE_CORRELATION = 5;
 
   private static final int POS_PATH_SRC = 0;
   private static final int POS_PATH_DST = 1;
@@ -506,18 +508,32 @@ public class SpoofaxAstToGraphQuery {
     return new CommonPathExpression(name, vertices, connections, constraints, cost);
   }
 
-  private static List<QueryVertex> getQueryVertices(IStrategoTerm verticesT, TranslationContext ctx) {
+  private static List<QueryVertex> getQueryVertices(IStrategoTerm verticesT, TranslationContext ctx)
+      throws PgqlException {
     List<QueryVertex> vertices = new ArrayList<>(verticesT.getSubtermCount());
     for (IStrategoTerm vertexT : verticesT) {
       String vertexName = getString(vertexT.getSubterm(POS_VERTEX_NAME));
-      IStrategoTerm originPosition = vertexT.getSubterm(POS_VERTEX_ORIGIN_OFFSET);
+      IStrategoTerm originOffsetT = vertexT.getSubterm(POS_VERTEX_ORIGIN_OFFSET);
+      String uniqueIdentifier = originOffsetT.toString();
       boolean anonymous = vertexName.contains(GENERATED_VAR_SUBSTR);
+      IStrategoTerm correlationT = vertexT.getSubterm(POS_VERTEX_CORRELATION);
+      QueryVariable correlation = getCorrelationVariable(ctx, correlationT);
 
-      QueryVertex vertex = new QueryVertex(vertexName, anonymous);
-      ctx.addVar(vertex, vertexName, originPosition);
+      QueryVertex vertex = new QueryVertex(vertexName, uniqueIdentifier, anonymous, correlation);
+      ctx.addVar(vertex, vertexName, originOffsetT);
       vertices.add(vertex);
     }
     return vertices;
+  }
+
+  private static QueryVariable getCorrelationVariable(TranslationContext ctx, IStrategoTerm correlationT)
+      throws PgqlException {
+    QueryVariable correlation = null;
+    if (!isNone(correlationT)) {
+      IStrategoTerm varRefT = correlationT.getSubterm(0);
+      correlation = ((VarRef) translateExp(varRefT, ctx)).getVariable();
+    }
+    return correlation;
   }
 
   private static LinkedHashSet<QueryExpression> getQueryExpressions(IStrategoTerm constraintsT, TranslationContext ctx)
@@ -568,21 +584,26 @@ public class SpoofaxAstToGraphQuery {
     return result;
   }
 
-  private static QueryEdge getQueryEdge(IStrategoTerm edgeT, TranslationContext ctx,
-      Map<String, QueryVertex> vertexMap) {
+  private static QueryEdge getQueryEdge(IStrategoTerm edgeT, TranslationContext ctx, Map<String, QueryVertex> vertexMap)
+      throws PgqlException {
     String name = getString(edgeT.getSubterm(POS_EDGE_NAME));
     String srcName = getString(edgeT.getSubterm(POS_EDGE_SRC));
     String dstName = getString(edgeT.getSubterm(POS_EDGE_DST));
     Direction direction = getDirection(edgeT.getSubterm(POS_EDGE_DIRECTION));
-    IStrategoTerm originPosition = edgeT.getSubterm(POS_EDGE_ORIGIN_OFFSET);
+    IStrategoTerm originOffsetT = edgeT.getSubterm(POS_EDGE_ORIGIN_OFFSET);
+    String uniqueIdentifier = originOffsetT.toString();
 
     QueryVertex src = getQueryVertex(vertexMap, srcName);
     QueryVertex dst = getQueryVertex(vertexMap, dstName);
 
-    QueryEdge edge = name.contains(GENERATED_VAR_SUBSTR) ? new QueryEdge(src, dst, name, true, direction)
-        : new QueryEdge(src, dst, name, false, direction);
+    boolean anonymous = name.contains(GENERATED_VAR_SUBSTR);
 
-    ctx.addVar(edge, name, originPosition);
+    IStrategoTerm correlationT = edgeT.getSubterm(POS_EDGE_CORRELATION);
+    QueryVariable correlation = getCorrelationVariable(ctx, correlationT);
+
+    QueryEdge edge = new QueryEdge(src, dst, name, uniqueIdentifier, anonymous, direction, correlation);
+
+    ctx.addVar(edge, name, originOffsetT);
     return edge;
   }
 
@@ -760,11 +781,12 @@ public class SpoofaxAstToGraphQuery {
       String varName = getString(expAsVarT.getSubterm(POS_EXPASVAR_VAR));
       boolean anonymous = ((IStrategoAppl) expAsVarT.getSubterm(POS_EXPASVAR_ANONYMOUS)).getConstructor().getName()
           .equals("Anonymous");
-      IStrategoTerm originPosition = expAsVarT.getSubterm(POS_EXPASVAR_ORIGIN_OFFSET);
+      IStrategoTerm originOffsetT = expAsVarT.getSubterm(POS_EXPASVAR_ORIGIN_OFFSET);
+      String uniqueIdentifier = originOffsetT.toString();
 
-      ExpAsVar expAsVar = new ExpAsVar(exp, varName, anonymous, isContainedInSelectClause);
+      ExpAsVar expAsVar = new ExpAsVar(exp, varName, uniqueIdentifier, anonymous, isContainedInSelectClause);
       expAsVars.add(expAsVar);
-      ctx.addVar(expAsVar, varName, originPosition);
+      ctx.addVar(expAsVar, varName, originOffsetT);
     }
     return expAsVars;
   }
