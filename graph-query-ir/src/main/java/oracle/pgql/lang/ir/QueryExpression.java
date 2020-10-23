@@ -78,7 +78,14 @@ public interface QueryExpression {
     IN_VALUE_LIST,
     IS_NULL,
     IF_ELSE,
-    SIMPLE_CASE
+    SIMPLE_CASE,
+
+    // temporal extensions
+    PERIOD_LENGTH_EXPRESSION,
+    ELEM_TIME_ACCESS,
+    PROP_TIME_ACCESS,
+    AGGR_FIRST,
+    AGGR_LAST
   }
 
   ExpressionType getExpType();
@@ -884,6 +891,123 @@ public interface QueryExpression {
     }
   }
 
+  class ElemTimeAccess implements QueryExpression {
+    private QueryVariable variable;
+    private TimeProperty timeProperty;
+
+    public ElemTimeAccess(QueryVariable variable, TimeProperty timeproperty) {
+      this.variable = variable;
+      this.timeProperty = timeproperty;
+    }
+
+    public QueryVariable getVariable() {
+      return variable;
+    }
+
+    public void setVariable(QueryVariable variable) {
+      this.variable = variable;
+    }
+
+    public TimeProperty getTimeProperty() {
+      return timeProperty;
+    }
+
+    public void setTimeProperty(TimeProperty timeProperty) {
+      this.timeProperty = timeProperty;
+    }
+
+    @Override
+    public String toString() {
+      return printPgqlString(variable) + "." + timeProperty.toString();
+    }
+
+    @Override
+    public ExpressionType getExpType() {
+      return ExpressionType.ELEM_TIME_ACCESS;
+    }
+
+    @Override
+    public void accept(QueryExpressionVisitor v) {
+      v.visit(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+
+      ElemTimeAccess that = (ElemTimeAccess) o;
+
+      if (!variable.equals(that.variable)) {
+        return false;
+      }
+      return timeProperty.equals(that.timeProperty);
+    }
+  }
+
+  class PropTimeAccess implements QueryExpression {
+
+    private PropertyAccess propertyAccess;
+    private TimeProperty timeProperty;
+
+    public PropTimeAccess(PropertyAccess property, TimeProperty timeType) {
+      this.propertyAccess = property;
+      this.timeProperty = timeType;
+    }
+
+    public PropertyAccess getPropertyAccess() {
+      return propertyAccess;
+    }
+
+    public void setPropertyAccess(PropertyAccess propertyAccess) {
+      this.propertyAccess = propertyAccess;
+    }
+
+    public TimeProperty getTimeProperty() {
+      return timeProperty;
+    }
+
+    public void setTimeProperty(TimeProperty timeProperty) {
+      this.timeProperty = timeProperty;
+    }
+
+    @Override
+    public ExpressionType getExpType() {
+      return ExpressionType.PROP_TIME_ACCESS;
+    }
+
+    @Override
+    public String toString() {
+      return propertyAccess.toString() + "." + timeProperty.toString();
+    }
+
+    @Override
+    public void accept(QueryExpressionVisitor v) {
+      v.visit(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+
+      PropTimeAccess that = (PropTimeAccess) o;
+
+      if (!propertyAccess.equals(that.propertyAccess)) {
+        return false;
+      }
+      return timeProperty.equals(that.timeProperty);
+    }
+  }
+
   interface Function extends QueryExpression {
 
     class Cast implements Function {
@@ -1148,6 +1272,88 @@ public interface QueryExpression {
       if (field != other.field)
         return false;
       return true;
+    }
+  }
+
+  /**
+   * An expression to get the length of a period in a specific granularity given as time unit.
+   */
+  class PeriodLengthExpression implements QueryExpression {
+
+    TimeUnit timeUnit;
+
+    QueryExpression exp;
+
+    public enum TimeUnit {
+      DAYS,
+      HOURS,
+      MINUTES,
+      SECONDS,
+      MILLISECONDS,
+      MICROSECONDS,
+      NANOSECONDS
+      }
+
+    public PeriodLengthExpression(TimeUnit timeUnit, QueryExpression exp) {
+      this.timeUnit = timeUnit;
+      this.exp = exp;
+    }
+
+    public PeriodLengthExpression(QueryExpression exp) {
+      this(TimeUnit.NANOSECONDS, exp);
+    }
+
+    public TimeUnit getTimeUnit() {
+      return timeUnit;
+    }
+
+    public void setTimeUnit(TimeUnit timeUnit) {
+      this.timeUnit = timeUnit;
+    }
+
+    public QueryExpression getExp() {
+      return exp;
+    }
+
+    public void setExp(QueryExpression exp) {
+      this.exp = exp;
+    }
+
+    @Override
+    public ExpressionType getExpType() {
+      return ExpressionType.PERIOD_LENGTH_EXPRESSION;
+    }
+
+    @Override
+    public String toString() {
+      return "LENGTH(" + getTimeUnit() + ", " + getExp() + ")";
+    }
+
+    @Override
+    public void accept(QueryExpressionVisitor v) {
+      v.visit(this);
+    }
+
+    @Override
+    public int hashCode() {
+      return 31;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      PeriodLengthExpression other = (PeriodLengthExpression) obj;
+      if (exp == null) {
+        if (other.exp != null)
+          return false;
+      } else if (!exp.equals(other.exp))
+        return false;
+      return timeUnit == other.timeUnit;
     }
   }
 
@@ -1779,6 +1985,12 @@ public interface QueryExpression {
           case AGGR_ARRAY_AGG:
             result = "ARRAY_AGG";
             break;
+          case AGGR_FIRST:
+            result = "FIRST";
+            break;
+          case AGGR_LAST:
+            result = "LAST";
+            break;
           default:
             throw new IllegalArgumentException("Unexpected expression type: " + getExpType());
         }
@@ -1900,6 +2112,40 @@ public interface QueryExpression {
       @Override
       public ExpressionType getExpType() {
         return ExpressionType.AGGR_ARRAY_AGG;
+      }
+
+      @Override
+      public void accept(QueryExpressionVisitor v) {
+        v.visit(this);
+      }
+    }
+
+    class AggrFirst extends AggrMin {
+
+      public AggrFirst(boolean distinct, QueryExpression exp) {
+        super(distinct, exp);
+      }
+
+      @Override
+      public ExpressionType getExpType() {
+        return ExpressionType.AGGR_FIRST;
+      }
+
+      @Override
+      public void accept(QueryExpressionVisitor v) {
+        v.visit(this);
+      }
+    }
+
+    class AggrLast extends AggrMax {
+
+      public AggrLast(boolean distinct, QueryExpression exp) {
+        super(distinct, exp);
+      }
+
+      @Override
+      public ExpressionType getExpType() {
+        return ExpressionType.AGGR_LAST;
       }
 
       @Override

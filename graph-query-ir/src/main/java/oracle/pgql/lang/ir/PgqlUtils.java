@@ -21,9 +21,10 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import oracle.pgql.lang.util.AbstractQueryExpressionVisitor;
-import oracle.pgql.lang.ir.QueryEdge;
 import oracle.pgql.lang.ir.QueryExpression.Aggregation;
 import oracle.pgql.lang.ir.QueryExpression.PropertyAccess;
+import oracle.pgql.lang.ir.QueryExpression.PropTimeAccess;
+import oracle.pgql.lang.ir.QueryExpression.ElemTimeAccess;
 import oracle.pgql.lang.ir.QueryExpression.ScalarSubquery;
 import oracle.pgql.lang.ir.QueryExpression.VarRef;
 import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrArrayAgg;
@@ -32,13 +33,14 @@ import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrCount;
 import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrMax;
 import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrMin;
 import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrSum;
+import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrFirst;
+import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrLast;
 import oracle.pgql.lang.ir.QueryExpression.Constant.ConstString;
 import oracle.pgql.lang.ir.QueryExpression.ExpressionType;
 import oracle.pgql.lang.ir.QueryExpression.FunctionCall;
 import oracle.pgql.lang.ir.QueryExpression.LogicalExpression.Or;
 import oracle.pgql.lang.ir.QueryExpression.Function.Exists;
 import oracle.pgql.lang.ir.QueryVariable.VariableType;
-import oracle.pgql.lang.ir.QueryVertex;
 import oracle.pgql.lang.ir.modify.ModifyQuery;
 
 public class PgqlUtils {
@@ -47,7 +49,8 @@ public class PgqlUtils {
 
   // make sure to keep in sync with list of reserved words in pgql-spoofax/syntax/Names.sdf3
   private final static Set<String> RESERVED_WORDS = new HashSet<>(
-      Arrays.asList("true", "false", "null", "not", "distinct"));
+      Arrays.asList("true", "false", "null", "not", "distinct", "tx_time", "val_time", "val_from", "val_to",
+        "tx_from", "tx_to"));
 
   static DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.#");
 
@@ -73,6 +76,16 @@ public class PgqlUtils {
       @Override
       public void visit(PropertyAccess propAccess) {
         result.add(propAccess.getVariable());
+      }
+
+      @Override
+      public void visit(PropTimeAccess propTimeAccess) {
+        result.add(propTimeAccess.getPropertyAccess().getVariable());
+      }
+
+      @Override
+      public void visit(ElemTimeAccess elemTimeAccess) {
+        result.add(elemTimeAccess.getVariable());
       }
 
       @Override
@@ -120,6 +133,16 @@ public class PgqlUtils {
       @Override
       public void visit(AggrAvg aggrAvg) {
         result.add(aggrAvg);
+      }
+
+      @Override
+      public void visit(AggrFirst aggrFirst) {
+        result.add(aggrFirst);
+      }
+
+      @Override
+      public void visit(AggrLast aggrLast) {
+        result.add(aggrLast);
       }
 
       @Override

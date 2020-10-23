@@ -17,6 +17,7 @@ public enum Function implements Keyword {
   FLOOR("FLOOR", "floor", "(exp)", "biggest integer value that is smaller than or equal to the expression"), //
   ROUND("ROUND", "round", "(exp)", "closest integer to the given expression"), //
   EXTRACT("EXTRACT", "EXTRACT", " field FROM exp", "extract datetime field out of a datetime expression"), //
+  LENGTH("LENGTH", "length", "(timeUnit, period)", "returns the length of a period in a given time unit"), //
   IN("IN", "exp IN", "(val1, val2, ...)", "check if expression is in array of values"), //
   IS_NULL("IS NULL", "exp IS NULL", "", "check if expression is null"), //
   IS_NOT_NULL("IS NOT NULL", "exp IS NOT NULL", "", "check if expression is not null");

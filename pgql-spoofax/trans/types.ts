@@ -110,3 +110,26 @@ type rules
   SetProperty(_, exp) : ty
   where exp : ty
     and not ( ty == VertexTy() or ty == EdgeTy() ) else error $[Cannot set the value of a property to a vertex or an edge] on exp
+  
+  // Temporal  
+  First(_, _) 		  	: TimestampTy()
+  Last(_, _) 			  	: TimestampTy()
+  PeriodLengthExp(_, _) 	: NumericTy()
+
+  Period(_, _) 		  	: UnknownTy()
+  PropertyTime(_, _)    	: UnknownTy()
+  ElementTime(_, _)		: UnknownTy()
+  TX_TIME() 				: UnknownTy()
+  TX_TIME() 			    : UnknownTy()
+
+  TX_FROM()				: TimestampTy()
+  TX_TO()				    : TimestampTy()
+  VAL_FROM()				: TimestampTy()
+  VAL_TO()				    : TimestampTy()
+
+  Overlaps(_, _)		  	: BooleanTy()
+  Equals(_, _)			: BooleanTy()
+  Precedes(_, _, _)		: BooleanTy()
+  Succeeds(_, _, _)		: BooleanTy()
+  Contains(_, _)		  	: BooleanTy()
+  Immediately()			: UnknownTy()

@@ -1,0 +1,70 @@
+module temporal
+
+imports
+  signatures/-
+  normalize
+  normalized-signatures
+  
+signature constructors // not sure if correct
+
+  SystemTimeExpression: List(ID) * SystemTimeCondition -> Expression
+  SystemTimePeriodSpecification: SystemTimeCondition -> SystemTimePeriodSpecification
+  Period: Timestamp * Timestamp -> Expression
+  PropertyTime : PropRef * Property -> Expression
+  First: Distinct * Expression -> First
+  Last: Distinct * Expression -> Last
+  
+rules
+
+  extract-system-time-specification:
+    FromWhereClauses(graphMatch*, whereClause) -> FromWhereClauses(graphMatch'*, whereClause')
+    with
+      graphMatch'*  	:= <map(try(drop-system-time-specification))> graphMatch*
+    ; tempGraphMatch*   := <filter(is-temporal-graph-match)> graphMatch*
+    ; sys-expr*         := <map(try( match-to-system-time-expression))> tempGraphMatch*
+    ; origin-exp 		:= <try(get-exp-from-where-clause)> whereClause
+  	; sys-func*			:= <map(try(to-system-time-function))> sys-expr*
+  	; expr' 			:= <foldl(build-conj)> (sys-func*, origin-exp)
+  	; whereClause'      := <try(put-exp-in-where-clause)> expr'
+    
+  // drop existing system time spec from match (working)
+  drop-system-time-specification:
+    GraphMatch(match-keyword, path-pattern, on-clause, _) ->
+    GraphMatch(match-keyword, path-pattern, on-clause)
+
+  // turn system time spec from match into system time expression
+  match-to-system-time-expression:
+    GraphMatch(match-keyword, path-pattern, on-clause, system-time-condition) ->
+    SystemTimeExpression(var*, system-time-condition)
+    where
+      var* := <collect-all(?Some(RegularIdentifier(_)))> path-pattern
+
+  // parse SystemTimeExpression to a function call
+  to-system-time-function:
+    SystemTimeExpression(var*, system-time-condition) ->  expr
+    where
+    	expr := <to-function(|"for_system_time")> [var*, system-time-condition]
+
+  // get the expression from a where clause
+  get-exp-from-where-clause:
+  	Some(WhereClause(exp)) -> exp
+
+  // create a where clause and inject an expression
+  put-exp-in-where-clause:
+  	exp -> Some(WhereClause(exp))
+  	where not(?Some(WhereClause(_)))
+
+  // build a conjunction
+  build-conj: (exp1, exp2) -> And(exp1, exp2)
+
+rules
+
+  is-temporal-graph-match = ?GraphMatch(_, _, _, _)	
+  is-where = ?Some(WhereClause(_))
+
+strategies // for debugging purposes
+	extract-system-time-specifications = normalize-before
+	
+	
+
+      

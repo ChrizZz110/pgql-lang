@@ -13,6 +13,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import oracle.pgql.lang.ir.TimeProperty;
 import org.spoofax.interpreter.terms.IStrategoAppl;
 import org.spoofax.interpreter.terms.IStrategoInt;
 import org.spoofax.interpreter.terms.IStrategoString;
@@ -27,6 +28,8 @@ import oracle.pgql.lang.ir.SchemaQualifiedName;
 import oracle.pgql.lang.ir.SelectQuery;
 import oracle.pgql.lang.ir.QueryExpression.ExpressionType;
 import oracle.pgql.lang.ir.QueryExpression.ExtractExpression;
+import oracle.pgql.lang.ir.QueryExpression.PeriodLengthExpression;
+import oracle.pgql.lang.ir.QueryExpression.PropertyAccess;
 import oracle.pgql.lang.ir.QueryExpression.IfElse;
 import oracle.pgql.lang.ir.QueryExpression.InPredicate;
 import oracle.pgql.lang.ir.QueryExpression.IsNull;
@@ -44,6 +47,7 @@ import oracle.pgql.lang.ir.QueryExpression.Constant.ConstTimeWithTimezone;
 import oracle.pgql.lang.ir.QueryExpression.Constant.ConstTimestamp;
 import oracle.pgql.lang.ir.QueryExpression.Constant.ConstTimestampWithTimezone;
 import oracle.pgql.lang.ir.QueryExpression.ExtractExpression.ExtractField;
+import oracle.pgql.lang.ir.QueryExpression.PeriodLengthExpression.TimeUnit;
 import oracle.pgql.lang.ir.QueryExpression.InPredicate.InValueList;
 import oracle.pgql.lang.util.SqlDateTimeFormatter;
 
@@ -64,6 +68,10 @@ public class CommonTranslationUtil {
   private static final int POS_VARREF_ORIGIN_OFFSET = 1;
   private static final int POS_PROPREF_VARREF = 0;
   private static final int POS_PROPREF_PROPNAME = 1;
+  private static final int POS_PROPTIME_PROPREF = 0;
+  private static final int POS_PROPTIME_TIMEPROP = 1;
+  private static final int POS_ELEMTIME_VARREF = 0;
+  private static final int POS_ELEMTIME_TIMEPROP = 1;
   private static final int POS_CAST_EXP = 0;
   private static final int POS_CAST_TARGET_TYPE_NAME = 1;
   private static final int POS_EXISTS_SUBQUERY = 0;
@@ -74,6 +82,8 @@ public class CommonTranslationUtil {
   private static final int POS_FUNCTION_CALL_EXPS = 2;
   private static final int POS_EXTRACT_FIELD = 0;
   private static final int POS_EXTRACT_EXP = 1;
+  private static final int POS_PERIOD_LENGTH_UNIT = 0;
+  private static final int POS_PERIOD_LENGTH_EXP = 1;
   private static final int POS_IN_PREDICATE_EXP = 0;
   private static final int POS_IN_PREDICATE_VALUES = 1;
   private static final int POS_IS_NULL_EXP = 0;
@@ -264,6 +274,18 @@ public class CommonTranslationUtil {
         VarRef varRef = (VarRef) translateExp(varRefT, ctx);
         String propname = getString(t.getSubterm(POS_PROPREF_PROPNAME));
         return new QueryExpression.PropertyAccess(varRef.getVariable(), propname);
+      case "PropertyTime":
+        IStrategoTerm propRefT = t.getSubterm(POS_PROPTIME_PROPREF);
+        PropertyAccess propAcc = (PropertyAccess) translateExp(propRefT, ctx);
+        IStrategoAppl timeTypeT = (IStrategoAppl) t.getSubterm(POS_PROPTIME_TIMEPROP);
+        TimeProperty timePropTy = TimeProperty.valueOf(timeTypeT.getName());
+        return new QueryExpression.PropTimeAccess(propAcc, timePropTy);
+      case "ElementTime":
+        IStrategoTerm varRefT2 = t.getSubterm(POS_ELEMTIME_VARREF);
+        VarRef varRef2 = (VarRef) translateExp(varRefT2, ctx);
+        IStrategoAppl timePropRefT = (IStrategoAppl) t.getSubterm(POS_ELEMTIME_TIMEPROP);
+        TimeProperty timePropTy2 = TimeProperty.valueOf(timePropRefT.getName());
+        return new QueryExpression.ElemTimeAccess(varRef2.getVariable(), timePropTy2);
       case "Cast":
         exp = translateExp(t.getSubterm(POS_CAST_EXP), ctx);
         String targetTypeName = getString(t.getSubterm(POS_CAST_TARGET_TYPE_NAME));
@@ -318,6 +340,49 @@ public class CommonTranslationUtil {
         IStrategoTerm expT = t.getSubterm(POS_EXTRACT_EXP);
         exp = translateExp(expT, ctx);
         return new ExtractExpression(field, exp);
+      case "PeriodLengthExp":
+        IStrategoTerm periodExpT = t.getSubterm(POS_PERIOD_LENGTH_EXP);
+        exp = translateExp(periodExpT, ctx);
+        // We receive t.getSubterm(0) as Some(TimeUnitOption(TimeUnit({theUnit}))) if the unit is given
+        // None() if it is not given
+        IStrategoAppl unitT = (IStrategoAppl) t.getSubterm(0);
+
+        if (unitT.getConstructor().getName().equals("None")) {
+          // No time unit is given, use default
+          return new PeriodLengthExpression(exp);
+        }
+        // A time unit is given
+        unitT = (IStrategoAppl) unitT
+          .getSubterm(POS_PERIOD_LENGTH_UNIT) // To access the optional
+          .getSubterm(0); // To get the unit literal
+
+        TimeUnit unit;
+        switch (unitT.getConstructor().getName()) {
+        case "Days":
+          unit = TimeUnit.DAYS;
+          break;
+        case "Hours":
+          unit = TimeUnit.HOURS;
+          break;
+        case "Minutes":
+          unit = TimeUnit.MINUTES;
+          break;
+        case "Seconds":
+          unit = TimeUnit.SECONDS;
+          break;
+        case "Milliseconds":
+          unit = TimeUnit.MILLISECONDS;
+          break;
+        case "Microseconds":
+          unit = TimeUnit.MICROSECONDS;
+          break;
+        case "Nanoseconds":
+          unit = TimeUnit.NANOSECONDS;
+          break;
+        default:
+          throw new IllegalArgumentException("Invalid time unit.");
+        }
+        return new PeriodLengthExpression(unit, exp);
       case "InPredicate":
         expT = t.getSubterm(POS_IN_PREDICATE_EXP);
         exp = translateExp(expT, ctx);
@@ -440,6 +505,8 @@ public class CommonTranslationUtil {
       case "SUM":
       case "AVG":
       case "ARRAY-AGG":
+      case "FIRST":
+      case "LAST":
         exp = translateExp(t.getSubterm(POS_AGGREGATE_EXP), ctx);
         boolean distinct = aggregationHasDistinct(t);
         switch (cons) {
@@ -455,6 +522,10 @@ public class CommonTranslationUtil {
             return new QueryExpression.Aggregation.AggrAvg(distinct, exp);
           case "ARRAY-AGG":
             return new QueryExpression.Aggregation.AggrArrayAgg(distinct, exp);
+          case "FIRST":
+            return new QueryExpression.Aggregation.AggrFirst(distinct, exp);
+          case "LAST":
+            return new QueryExpression.Aggregation.AggrLast(distinct, exp);
           default:
             throw new IllegalArgumentException(cons);
         }

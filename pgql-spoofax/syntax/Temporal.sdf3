@@ -1,0 +1,137 @@
+module Temporal
+
+imports
+
+  Names
+  Literals
+  pgql-lang
+  Legacy
+  Expressions
+  GraphPattern
+
+template options
+
+  keyword -/- [a-zA-Z0-9]
+  
+context-free syntax // Extended FROM clause
+
+/* 
+Objective:
+
+	SELECT ... FROM MATCH (a:Person),
+					MATCH (u:University),
+					MATCH (b:Organization) FOR TX_TIME AS OF TIMESTAMP '2020-01-01 00:00:00',
+					MATCH (e)-[f]->(g) FOR TX_TIME ALL
+	WHERE for_tx_time(u, 'AS OF', [TIMESTAMP '2020-01-01 00:00:00'])
+*/
+
+  GraphMatch.GraphMatch = <<MatchKeyword?> <PathPattern> <OnClause?> <SystemTimePeriodSpecification>> {case-insensitive}
+
+  GraphMatch.ParenthesizedGraphMatch = <MATCH ( <{PathPattern ","}+> ) <OnClause?> <SystemTimePeriodSpecification>> {case-insensitive}
+  
+  SystemTimePeriodSpecification.SystemTimePeriodSpecification = <FOR TX_TIME <SystemTimeCondition>> {case-insensitive}
+
+  SystemTimeCondition.AsOf          = <AS OF <PointInTime>> {case-insensitive}
+  SystemTimeCondition.FromTo        = <FROM <PointInTime> TO <PointInTime>> {case-insensitive}
+  SystemTimeCondition.BetweenAnd    = <BETWEEN <PointInTime> AND <PointInTime>> {case-insensitive}
+  SystemTimeCondition.All           = <ALL> {case-insensitive}
+  
+  PointInTime.PointInTime           = <<Exp>> {case-insensitive}
+
+
+context-free syntax // Extended syntax for projection and selection
+
+/* 
+Objective:
+
+	SELECT	a.tx_from			FROM MATCH (a)  // returns a timestamp
+			a.tx_to								// returns a timestamp
+			a.tx_time							// returns a period
+			
+			a.prop.tx_from						// returns a timestamp
+			a.prop.tx_to						// returns a timestamp
+			a.prop.tx_time						// returns a period
+			
+			PERIOD(TIMESTAMP '2020-04-05 12:00:00', TIMESTAMP '2020-04-05 13:00:00') 	// returns a period
+			PERIOD(a.tx_from, TIMESTAMP '2020-...')										// returns a period
+			PERIOD(a.prop1.tx_from, a.prop2.tx_to)										// returns a period
+*/
+
+  /*
+  Exp.PropertyTime	 			= <<PropRef>.<TimeProperty>>
+  Exp.Period       				= <PERIOD(<Timestamp>,<Timestamp>)> {case-insensitive}
+  Exp.ElementTime				= <<VarRef>.<TimeProperty>>
+  */
+  
+  TemporalExp.PropertyTime	 	= <<PropRef>.<TimeProperty>>
+  TemporalExp.Period       		= <PERIOD(<Timestamp>,<Timestamp>)> {case-insensitive}
+  TemporalExp.ElementTime		= <<VarRef>.<TimeProperty>>
+
+  //PeriodRef						= Exp // ???
+  Exp 							= TemporalExp
+  PeriodRef						= TemporalExp
+	
+ 
+  TimeProperty.TX_TIME 			= <TX_TIME> {case-insensitive}
+  TimeProperty.VAL_TIME 		= <VAL_TIME> {case-insensitive}
+
+  TimeProperty.TX_FROM			= <TX_FROM> {case-insensitive}
+  TimeProperty.TX_TO			= <TX_TO> {case-insensitive}
+  TimeProperty.VAL_FROM			= <VAL_FROM> {case-insensitive}
+  TimeProperty.VAL_TO			= <VAL_TO> {case-insensitive}
+
+
+context-free syntax // Aggregates
+
+  Exp.FIRST        			= <FIRST(<Distinct?><Exp>)> {case-insensitive}
+  Exp.LAST         			= <LAST(<Distinct?><Exp>)> {case-insensitive}
+
+context-free syntax // Length with optional field
+
+  Exp.PeriodLengthExp         		= <LENGTH(<TimeUnitOption?><PeriodRef>)> {case-insensitive}
+  TimeUnitOption.TimeUnitOption   	= <<TimeUnit>,> {case-insensitive}
+
+  TimeUnit.Days           = <DAYS> {case-insensitive}
+  TimeUnit.Hours          = <HOURS> {case-insensitive}
+  TimeUnit.Minutes        = <MINUTES> {case-insensitive}
+  TimeUnit.Seconds        = <SECONDS> {case-insensitive}
+  TimeUnit.Milliseconds   = <MILLISECONDS> {case-insensitive}
+  TimeUnit.Microseconds   = <MICROSECONDS> {case-insensitive}
+  TimeUnit.Nanoseconds    = <NANOSECONDS> {case-insensitive}
+
+context-free syntax
+
+/*
+	PeriodRef could be: PropertyTime, ElementTime, Period
+*/
+
+  Exp.Overlaps     = <<PeriodRef> OVERLAPS <PeriodRef>> {case-insensitive}
+  Exp.Equals       = <<PeriodRef> EQUALS <PeriodRef>> {case-insensitive}
+  Exp.Precedes     = <<PeriodRef> <Immediately?> PRECEDES <PeriodRef>> {case-insensitive}
+  Exp.Succeeds     = <<PeriodRef> <Immediately?> SUCCEEDS <PeriodRef>> {case-insensitive}
+  Exp.Contains	   = <<PeriodRef> CONTAINS <Exp>> {case-insensitive} // Add timestamp here
+
+  Immediately.Immediately = <IMMEDIATELY> {case-insensitive}
+
+lexical syntax // reserved keywords
+
+  FUNCTION-NAME  	 = 'first' {reject}
+  FUNCTION-NAME 	 = 'last' {reject}
+  FUNCTION-NAME 	 = 'length' {reject}
+  REGULAR-IDENTIFIER = 'tx_time' {reject}
+  REGULAR-IDENTIFIER = 'val_time' {reject}
+  REGULAR-IDENTIFIER = 'val_from' {reject}
+  REGULAR-IDENTIFIER = 'val_to' {reject}
+  REGULAR-IDENTIFIER = 'tx_from' {reject}
+  REGULAR-IDENTIFIER = 'tx_to' {reject}
+  REGULAR-IDENTIFIER = 'between' {reject}
+  REGULAR-IDENTIFIER = 'immediately' {reject}
+  REGULAR-IDENTIFIER = 'precedes' {reject}
+  REGULAR-IDENTIFIER = 'succeeds' {reject}
+  REGULAR-IDENTIFIER = 'overlaps' {reject}
+  REGULAR-IDENTIFIER = 'contains' {reject}
+  REGULAR-IDENTIFIER = 'equals' {reject}
+ 
+
+
+

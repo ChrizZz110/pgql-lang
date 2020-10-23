@@ -6,6 +6,7 @@ imports
   Literals
   pgql-lang
   Legacy
+  Temporal
 
 template options
 

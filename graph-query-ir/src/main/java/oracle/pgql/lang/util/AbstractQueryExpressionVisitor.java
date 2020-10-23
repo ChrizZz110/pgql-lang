@@ -16,6 +16,8 @@ import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrCount;
 import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrMax;
 import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrMin;
 import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrSum;
+import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrFirst;
+import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrLast;
 import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrArrayAgg;
 import oracle.pgql.lang.ir.QueryExpression.ArithmeticExpression.Add;
 import oracle.pgql.lang.ir.QueryExpression.ArithmeticExpression.Div;
@@ -34,6 +36,7 @@ import oracle.pgql.lang.ir.QueryExpression.Constant.ConstTimeWithTimezone;
 import oracle.pgql.lang.ir.QueryExpression.Constant.ConstTimestamp;
 import oracle.pgql.lang.ir.QueryExpression.Constant.ConstTimestampWithTimezone;
 import oracle.pgql.lang.ir.QueryExpression.ExtractExpression;
+import oracle.pgql.lang.ir.QueryExpression.PeriodLengthExpression;
 import oracle.pgql.lang.ir.QueryExpression.FunctionCall;
 import oracle.pgql.lang.ir.QueryExpression.IfElse;
 import oracle.pgql.lang.ir.QueryExpression.InPredicate;
@@ -45,6 +48,8 @@ import oracle.pgql.lang.ir.QueryExpression.LogicalExpression.And;
 import oracle.pgql.lang.ir.QueryExpression.LogicalExpression.Not;
 import oracle.pgql.lang.ir.QueryExpression.LogicalExpression.Or;
 import oracle.pgql.lang.ir.QueryExpression.PropertyAccess;
+import oracle.pgql.lang.ir.QueryExpression.PropTimeAccess;
+import oracle.pgql.lang.ir.QueryExpression.ElemTimeAccess;
 import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Equal;
 import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Greater;
 import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.GreaterEqual;
@@ -80,6 +85,14 @@ public abstract class AbstractQueryExpressionVisitor implements QueryExpressionV
 
   @Override
   public void visit(PropertyAccess propAccess) {
+  }
+
+  @Override
+  public void visit(PropTimeAccess propAccess) {
+  }
+
+  @Override
+  public void visit(ElemTimeAccess varTimeAccess) {
   }
 
   @Override
@@ -237,6 +250,16 @@ public abstract class AbstractQueryExpressionVisitor implements QueryExpressionV
   }
 
   @Override
+  public void visit(AggrFirst aggrFirst) {
+    aggrFirst.getExp().accept(this);
+  }
+
+  @Override
+  public void visit(AggrLast aggrLast) {
+    aggrLast.getExp().accept(this);
+  }
+
+  @Override
   public void visit(Star star) {
   }
 
@@ -253,6 +276,11 @@ public abstract class AbstractQueryExpressionVisitor implements QueryExpressionV
   @Override
   public void visit(ExtractExpression extractExpression) {
     extractExpression.getExp().accept(this);
+  }
+
+  @Override
+  public void visit(PeriodLengthExpression periodLengthExpression) {
+    periodLengthExpression.getExp().accept(this);
   }
 
   @Override

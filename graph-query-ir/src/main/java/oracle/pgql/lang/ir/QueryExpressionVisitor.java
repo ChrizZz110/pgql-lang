@@ -9,6 +9,8 @@ import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrMax;
 import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrMin;
 import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrSum;
 import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrArrayAgg;
+import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrFirst;
+import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrLast;
 import oracle.pgql.lang.ir.QueryExpression.ArithmeticExpression.Add;
 import oracle.pgql.lang.ir.QueryExpression.ArithmeticExpression.Div;
 import oracle.pgql.lang.ir.QueryExpression.ArithmeticExpression.Mod;
@@ -16,7 +18,6 @@ import oracle.pgql.lang.ir.QueryExpression.ArithmeticExpression.Mul;
 import oracle.pgql.lang.ir.QueryExpression.ArithmeticExpression.Sub;
 import oracle.pgql.lang.ir.QueryExpression.ArithmeticExpression.UMin;
 import oracle.pgql.lang.ir.QueryExpression.BindVariable;
-import oracle.pgql.lang.ir.QueryExpressionVisitor;
 import oracle.pgql.lang.ir.QueryExpression.Constant.ConstBoolean;
 import oracle.pgql.lang.ir.QueryExpression.Constant.ConstDate;
 import oracle.pgql.lang.ir.QueryExpression.Constant.ConstDecimal;
@@ -27,6 +28,7 @@ import oracle.pgql.lang.ir.QueryExpression.Constant.ConstTimeWithTimezone;
 import oracle.pgql.lang.ir.QueryExpression.Constant.ConstTimestamp;
 import oracle.pgql.lang.ir.QueryExpression.Constant.ConstTimestampWithTimezone;
 import oracle.pgql.lang.ir.QueryExpression.ExtractExpression;
+import oracle.pgql.lang.ir.QueryExpression.PeriodLengthExpression;
 import oracle.pgql.lang.ir.QueryExpression.FunctionCall;
 import oracle.pgql.lang.ir.QueryExpression.IfElse;
 import oracle.pgql.lang.ir.QueryExpression.InPredicate;
@@ -38,6 +40,8 @@ import oracle.pgql.lang.ir.QueryExpression.LogicalExpression.And;
 import oracle.pgql.lang.ir.QueryExpression.LogicalExpression.Not;
 import oracle.pgql.lang.ir.QueryExpression.LogicalExpression.Or;
 import oracle.pgql.lang.ir.QueryExpression.PropertyAccess;
+import oracle.pgql.lang.ir.QueryExpression.PropTimeAccess;
+import oracle.pgql.lang.ir.QueryExpression.ElemTimeAccess;
 import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Equal;
 import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Greater;
 import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.GreaterEqual;
@@ -119,6 +123,10 @@ public interface QueryExpressionVisitor {
 
   public void visit(AggrArrayAgg aggrArrayAgg);
 
+  public void visit(AggrFirst aggrFirst);
+
+  public void visit(AggrLast aggrLast);
+
   public void visit(VarRef varRef);
 
   public void visit(BindVariable bindVariable);
@@ -127,6 +135,10 @@ public interface QueryExpressionVisitor {
 
   public void visit(PropertyAccess propAccess);
 
+  public void visit(ElemTimeAccess varTimeAccess);
+
+  public void visit(PropTimeAccess periodAccess);
+
   public void visit(Cast cast);
 
   public void visit(Exists exists);
@@ -134,6 +146,8 @@ public interface QueryExpressionVisitor {
   public void visit(FunctionCall functionCall);
 
   public void visit(ExtractExpression extractExpression);
+
+  public void visit(PeriodLengthExpression periodLengthExpression);
 
   public void visit(InPredicate inPredicate);
 
