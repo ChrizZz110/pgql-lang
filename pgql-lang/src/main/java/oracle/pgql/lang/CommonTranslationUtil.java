@@ -358,26 +358,35 @@ public class CommonTranslationUtil {
 
         TimeUnit unit;
         switch (unitT.getConstructor().getName()) {
-        case "Days":
-          unit = TimeUnit.DAYS;
+        case "Year":
+          unit = TimeUnit.YEAR;
           break;
-        case "Hours":
-          unit = TimeUnit.HOURS;
+        case "Quarter":
+          unit = TimeUnit.QUARTER;
           break;
-        case "Minutes":
-          unit = TimeUnit.MINUTES;
+        case "Month":
+          unit = TimeUnit.MONTH;
           break;
-        case "Seconds":
-          unit = TimeUnit.SECONDS;
+        case "Week":
+          unit = TimeUnit.WEEK;
           break;
-        case "Milliseconds":
-          unit = TimeUnit.MILLISECONDS;
+        case "Day":
+          unit = TimeUnit.DAY;
           break;
-        case "Microseconds":
-          unit = TimeUnit.MICROSECONDS;
+        case "Hour":
+          unit = TimeUnit.HOUR;
           break;
-        case "Nanoseconds":
-          unit = TimeUnit.NANOSECONDS;
+        case "Minute":
+          unit = TimeUnit.MINUTE;
+          break;
+        case "Second":
+          unit = TimeUnit.SECOND;
+          break;
+        case "Millisecond":
+          unit = TimeUnit.MILLISECOND;
+          break;
+        case "Microsecond":
+          unit = TimeUnit.MICROSECOND;
           break;
         default:
           throw new IllegalArgumentException("Invalid time unit.");

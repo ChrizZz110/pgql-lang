@@ -91,13 +91,16 @@ context-free syntax // Length with optional field
   Exp.PeriodLengthExp         		= <LENGTH(<TimeUnitOption?><PeriodRef>)> {case-insensitive}
   TimeUnitOption.TimeUnitOption   	= <<TimeUnit>,> {case-insensitive}
 
-  TimeUnit.Days           = <DAYS> {case-insensitive}
-  TimeUnit.Hours          = <HOURS> {case-insensitive}
-  TimeUnit.Minutes        = <MINUTES> {case-insensitive}
-  TimeUnit.Seconds        = <SECONDS> {case-insensitive}
-  TimeUnit.Milliseconds   = <MILLISECONDS> {case-insensitive}
-  TimeUnit.Microseconds   = <MICROSECONDS> {case-insensitive}
-  TimeUnit.Nanoseconds    = <NANOSECONDS> {case-insensitive}
+  TimeUnit.Year          = <YEAR> {case-insensitive}
+  TimeUnit.Quarter       = <QUARTER> {case-insensitive}
+  TimeUnit.Month         = <MONTH> {case-insensitive}
+  TimeUnit.Week          = <WEEK> {case-insensitive}
+  TimeUnit.Day           = <DAY> {case-insensitive}
+  TimeUnit.Hour          = <HOUR> {case-insensitive}
+  TimeUnit.Minute        = <MINUTE> {case-insensitive}
+  TimeUnit.Second        = <SECOND> {case-insensitive}
+  TimeUnit.Millisecond   = <MILLISECOND> {case-insensitive}
+  TimeUnit.Microsecond   = <MICROSECOND> {case-insensitive}
 
 context-free syntax
 

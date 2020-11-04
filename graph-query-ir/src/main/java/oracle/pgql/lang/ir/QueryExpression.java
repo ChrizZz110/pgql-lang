@@ -1284,15 +1284,7 @@ public interface QueryExpression {
 
     QueryExpression exp;
 
-    public enum TimeUnit {
-      DAYS,
-      HOURS,
-      MINUTES,
-      SECONDS,
-      MILLISECONDS,
-      MICROSECONDS,
-      NANOSECONDS
-      }
+    public enum TimeUnit { YEAR, QUARTER, MONTH, WEEK, DAY, HOUR, MINUTE, SECOND, MILLISECOND, MICROSECOND }
 
     public PeriodLengthExpression(TimeUnit timeUnit, QueryExpression exp) {
       this.timeUnit = timeUnit;
@@ -1300,7 +1292,7 @@ public interface QueryExpression {
     }
 
     public PeriodLengthExpression(QueryExpression exp) {
-      this(TimeUnit.NANOSECONDS, exp);
+      this(TimeUnit.MICROSECOND, exp);
     }
 
     public TimeUnit getTimeUnit() {
