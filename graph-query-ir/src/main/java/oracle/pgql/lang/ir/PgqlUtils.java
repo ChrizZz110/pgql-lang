@@ -25,6 +25,7 @@ import oracle.pgql.lang.ir.QueryExpression.Aggregation;
 import oracle.pgql.lang.ir.QueryExpression.PropertyAccess;
 import oracle.pgql.lang.ir.QueryExpression.PropTimeAccess;
 import oracle.pgql.lang.ir.QueryExpression.ElemTimeAccess;
+import oracle.pgql.lang.ir.QueryExpression.Period;
 import oracle.pgql.lang.ir.QueryExpression.ScalarSubquery;
 import oracle.pgql.lang.ir.QueryExpression.VarRef;
 import oracle.pgql.lang.ir.QueryExpression.Aggregation.AggrArrayAgg;
@@ -78,6 +79,23 @@ public class PgqlUtils {
         result.add(propAccess.getVariable());
       }
 
+      @Override
+      public void visit(Period period) {
+        if (period.getBeginningBound().getExpType().equals(ExpressionType.PROP_TIME_ACCESS)) {
+          PropTimeAccess propTimeAccess = (PropTimeAccess) period.getBeginningBound();
+          visit(propTimeAccess);
+        } else if (period.getBeginningBound().getExpType().equals(ExpressionType.ELEM_TIME_ACCESS)) {
+          ElemTimeAccess elemTimeAccess = (ElemTimeAccess) period.getBeginningBound();
+          visit(elemTimeAccess);
+        }
+        if (period.getEndingBound().getExpType().equals(ExpressionType.PROP_TIME_ACCESS)) {
+          PropTimeAccess propTimeAccess = (PropTimeAccess) period.getEndingBound();
+          visit(propTimeAccess);
+        } else if (period.getEndingBound().getExpType().equals(ExpressionType.ELEM_TIME_ACCESS)) {
+          ElemTimeAccess elemTimeAccess = (ElemTimeAccess) period.getEndingBound();
+          visit(elemTimeAccess);
+        }
+      }
       @Override
       public void visit(PropTimeAccess propTimeAccess) {
         result.add(propTimeAccess.getPropertyAccess().getVariable());

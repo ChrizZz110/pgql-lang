@@ -50,6 +50,7 @@ import oracle.pgql.lang.ir.QueryExpression.LogicalExpression.Or;
 import oracle.pgql.lang.ir.QueryExpression.PropertyAccess;
 import oracle.pgql.lang.ir.QueryExpression.PropTimeAccess;
 import oracle.pgql.lang.ir.QueryExpression.ElemTimeAccess;
+import oracle.pgql.lang.ir.QueryExpression.Period;
 import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Equal;
 import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Greater;
 import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.GreaterEqual;
@@ -93,6 +94,10 @@ public abstract class AbstractQueryExpressionVisitor implements QueryExpressionV
 
   @Override
   public void visit(ElemTimeAccess varTimeAccess) {
+  }
+
+  @Override
+  public void visit(Period period) {
   }
 
   @Override

@@ -33,6 +33,7 @@ import oracle.pgql.lang.ir.QueryExpression.PropertyAccess;
 import oracle.pgql.lang.ir.QueryExpression.IfElse;
 import oracle.pgql.lang.ir.QueryExpression.InPredicate;
 import oracle.pgql.lang.ir.QueryExpression.IsNull;
+import oracle.pgql.lang.ir.QueryExpression.Period;
 import oracle.pgql.lang.ir.QueryExpression.ScalarSubquery;
 import oracle.pgql.lang.ir.QueryExpression.SimpleCase;
 import oracle.pgql.lang.ir.QueryExpression.VarRef;
@@ -84,6 +85,8 @@ public class CommonTranslationUtil {
   private static final int POS_EXTRACT_EXP = 1;
   private static final int POS_PERIOD_LENGTH_UNIT = 0;
   private static final int POS_PERIOD_LENGTH_EXP = 1;
+  private static final int POS_PERIOD_BEGINNING_BOUND_EXP = 0;
+  private static final int POS_PERIOD_ENDING_BOUND_EXP = 1;
   private static final int POS_IN_PREDICATE_EXP = 0;
   private static final int POS_IN_PREDICATE_VALUES = 1;
   private static final int POS_IS_NULL_EXP = 0;
@@ -392,6 +395,10 @@ public class CommonTranslationUtil {
           throw new IllegalArgumentException("Invalid time unit.");
         }
         return new PeriodLengthExpression(unit, exp);
+      case "Period" :
+        QueryExpression expP1 = translateExp(t.getSubterm(POS_PERIOD_BEGINNING_BOUND_EXP), ctx);
+        QueryExpression expP2 = translateExp(t.getSubterm(POS_PERIOD_ENDING_BOUND_EXP), ctx);
+        return new Period(expP1, expP2);
       case "InPredicate":
         expT = t.getSubterm(POS_IN_PREDICATE_EXP);
         exp = translateExp(expT, ctx);

@@ -64,8 +64,9 @@ Objective:
   */
   
   TemporalExp.PropertyTime	 	= <<PropRef>.<TimeProperty>>
-  TemporalExp.Period       		= <PERIOD(<Timestamp>,<Timestamp>)> {case-insensitive}
+  TemporalExp.Period       		= <PERIOD(<TemporalExp>,<TemporalExp>)> {case-insensitive}
   TemporalExp.ElementTime		= <<VarRef>.<TimeProperty>>
+  TemporalExp					= Timestamp 
 
   //PeriodRef						= Exp // ???
   Exp 							= TemporalExp
@@ -104,15 +105,11 @@ context-free syntax // Length with optional field
 
 context-free syntax
 
-/*
-	PeriodRef could be: PropertyTime, ElementTime, Period
-*/
-
   Exp.Overlaps     = <<PeriodRef> OVERLAPS <PeriodRef>> {case-insensitive}
   Exp.Equals       = <<PeriodRef> EQUALS <PeriodRef>> {case-insensitive}
   Exp.Precedes     = <<PeriodRef> <Immediately?> PRECEDES <PeriodRef>> {case-insensitive}
   Exp.Succeeds     = <<PeriodRef> <Immediately?> SUCCEEDS <PeriodRef>> {case-insensitive}
-  Exp.Contains	   = <<PeriodRef> CONTAINS <Exp>> {case-insensitive} // Add timestamp here
+  Exp.Contains	   = <<PeriodRef> CONTAINS <TemporalExp>> {case-insensitive}
 
   Immediately.Immediately = <IMMEDIATELY> {case-insensitive}
 
@@ -121,6 +118,7 @@ lexical syntax // reserved keywords
   FUNCTION-NAME  	 = 'first' {reject}
   FUNCTION-NAME 	 = 'last' {reject}
   FUNCTION-NAME 	 = 'length' {reject}
+  FUNCTION-NAME		 = 'period' {reject}
   REGULAR-IDENTIFIER = 'tx_time' {reject}
   REGULAR-IDENTIFIER = 'val_time' {reject}
   REGULAR-IDENTIFIER = 'val_from' {reject}

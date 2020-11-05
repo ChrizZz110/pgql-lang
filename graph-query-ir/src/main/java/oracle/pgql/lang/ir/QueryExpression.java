@@ -85,7 +85,8 @@ public interface QueryExpression {
     ELEM_TIME_ACCESS,
     PROP_TIME_ACCESS,
     AGGR_FIRST,
-    AGGR_LAST
+    AGGR_LAST,
+    PERIOD
   }
 
   ExpressionType getExpType();
@@ -1275,6 +1276,72 @@ public interface QueryExpression {
     }
   }
 
+  class Period implements QueryExpression {
+
+    private final List<ExpressionType> validExpressionTypes = Arrays.asList(
+      ExpressionType.ELEM_TIME_ACCESS,
+      ExpressionType.PROP_TIME_ACCESS,
+      ExpressionType.TIMESTAMP,
+      ExpressionType.TIMESTAMP_WITH_TIMEZONE);
+
+    QueryExpression beginningBound;
+    QueryExpression endingBound;
+
+    public Period(QueryExpression beginningBound, QueryExpression endingBound) {
+      if (!validExpressionTypes.contains(beginningBound.getExpType()) ||
+        !validExpressionTypes.contains(endingBound.getExpType())) {
+        throw new IllegalArgumentException(
+          "Invalid expression type for argument of Period expression: '" + getExpType() +
+          "'. Valid types are: [" + validExpressionTypes + "].");
+      }
+      this.beginningBound = beginningBound;
+      this.endingBound = endingBound;
+    }
+
+    public QueryExpression getBeginningBound() {
+      return beginningBound;
+    }
+
+    public void setBeginningBound(QueryExpression beginningBound) {
+      this.beginningBound = beginningBound;
+    }
+
+    public QueryExpression getEndingBound() {
+      return endingBound;
+    }
+
+    public void setEndingBound(QueryExpression endingBound) {
+      this.endingBound = endingBound;
+    }
+
+    @Override
+    public ExpressionType getExpType() {
+      return ExpressionType.PERIOD;
+    }
+
+    @Override
+    public String toString() {
+      return "PERIOD(" + getBeginningBound() + ", " + getEndingBound() + ")";
+    }
+
+    @Override
+    public void accept(QueryExpressionVisitor v) {
+      v.visit(this);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      Period other = (Period) obj;
+      return beginningBound.equals(other.getBeginningBound()) && endingBound.equals(other.getEndingBound());
+    }
+  }
+
   /**
    * An expression to get the length of a period in a specific granularity given as time unit.
    */
@@ -1324,11 +1391,6 @@ public interface QueryExpression {
     @Override
     public void accept(QueryExpressionVisitor v) {
       v.visit(this);
-    }
-
-    @Override
-    public int hashCode() {
-      return 31;
     }
 
     @Override

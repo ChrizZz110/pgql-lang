@@ -29,6 +29,7 @@ import oracle.pgql.lang.ir.QueryExpression.Constant.ConstTimestamp;
 import oracle.pgql.lang.ir.QueryExpression.Constant.ConstTimestampWithTimezone;
 import oracle.pgql.lang.ir.QueryExpression.ExtractExpression;
 import oracle.pgql.lang.ir.QueryExpression.PeriodLengthExpression;
+import oracle.pgql.lang.ir.QueryExpression.Period;
 import oracle.pgql.lang.ir.QueryExpression.FunctionCall;
 import oracle.pgql.lang.ir.QueryExpression.IfElse;
 import oracle.pgql.lang.ir.QueryExpression.InPredicate;
@@ -134,6 +135,8 @@ public interface QueryExpressionVisitor {
   public void visit(Star star);
 
   public void visit(PropertyAccess propAccess);
+
+  public void visit(Period period);
 
   public void visit(ElemTimeAccess varTimeAccess);
 
