@@ -43,6 +43,11 @@ import oracle.pgql.lang.ir.QueryExpression.LogicalExpression.Or;
 import oracle.pgql.lang.ir.QueryExpression.PropertyAccess;
 import oracle.pgql.lang.ir.QueryExpression.PropTimeAccess;
 import oracle.pgql.lang.ir.QueryExpression.ElemTimeAccess;
+import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Overlaps;
+import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Equals;
+import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Precedes;
+import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Succeeds;
+import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Contains;
 import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Equal;
 import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Greater;
 import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.GreaterEqual;
@@ -199,4 +204,14 @@ public interface QueryExpressionVisitor {
   public void visit(Update update);
 
   public void visit(SetPropertyExpression setPropertyExpression);
+
+  void visit(Overlaps overlaps);
+
+  void visit(Equals equals);
+
+  void visit(Precedes precedes);
+
+  void visit(Succeeds succeeds);
+
+  void visit(Contains contains);
 }

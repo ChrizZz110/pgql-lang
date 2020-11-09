@@ -57,6 +57,11 @@ import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.GreaterEqual;
 import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Less;
 import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.LessEqual;
 import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.NotEqual;
+import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Overlaps;
+import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Equals;
+import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Precedes;
+import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Succeeds;
+import oracle.pgql.lang.ir.QueryExpression.RelationalExpression.Contains;
 import oracle.pgql.lang.ir.QueryExpression.SimpleCase;
 import oracle.pgql.lang.ir.modify.DeleteClause;
 import oracle.pgql.lang.ir.modify.EdgeInsertion;
@@ -98,6 +103,8 @@ public abstract class AbstractQueryExpressionVisitor implements QueryExpressionV
 
   @Override
   public void visit(Period period) {
+    period.getBeginningBound().accept(this);
+    period.getEndingBound().accept(this);
   }
 
   @Override
@@ -450,5 +457,31 @@ public abstract class AbstractQueryExpressionVisitor implements QueryExpressionV
   public void visit(SetPropertyExpression setPropertyExpression) {
     setPropertyExpression.getPropertyAccess().accept(this);
     setPropertyExpression.getValueExpression().accept(this);
+  }
+
+  @Override
+  public void visit(Overlaps overlaps) {
+    overlaps.getExp1().accept(this);
+    overlaps.getExp2().accept(this);
+  }
+
+  public void visit(Equals equals) {
+    equals.getExp1().accept(this);
+    equals.getExp2().accept(this);
+  }
+
+  public void visit(Precedes precedes) {
+    precedes.getExp1().accept(this);
+    precedes.getExp2().accept(this);
+  }
+
+  public void visit(Succeeds succeeds) {
+    succeeds.getExp1().accept(this);
+    succeeds.getExp2().accept(this);
+  }
+
+  public void visit(Contains contains) {
+    contains.getExp1().accept(this);
+    contains.getExp2().accept(this);
   }
 }

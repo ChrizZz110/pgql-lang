@@ -86,7 +86,12 @@ public interface QueryExpression {
     PROP_TIME_ACCESS,
     AGGR_FIRST,
     AGGR_LAST,
-    PERIOD
+    PERIOD,
+    OVERLAPS,
+    EQUALS,
+    PRECEDES,
+    SUCCEEDS,
+    CONTAINS
   }
 
   ExpressionType getExpType();
@@ -494,6 +499,142 @@ public interface QueryExpression {
       @Override
       public String toString() {
         return "(" + getExp1() + " <= " + getExp2() + ")";
+      }
+
+      @Override
+      public void accept(QueryExpressionVisitor v) {
+        v.visit(this);
+      }
+    }
+
+    class Overlaps extends BinaryExpression implements RelationalExpression {
+      public Overlaps(QueryExpression exp1, QueryExpression exp2) {
+        super(exp1, exp2);
+      }
+
+      @Override
+      public ExpressionType getExpType() {
+        return ExpressionType.OVERLAPS;
+      }
+
+      @Override
+      public String toString() {
+        return getExp1() + " OVERLAPS " + getExp2();
+      }
+
+      @Override
+      public void accept(QueryExpressionVisitor v) {
+        v.visit(this);
+      }
+    }
+
+    class Equals extends BinaryExpression implements RelationalExpression {
+      public Equals(QueryExpression exp1, QueryExpression exp2) {
+        super(exp1, exp2);
+      }
+
+      @Override
+      public ExpressionType getExpType() {
+        return ExpressionType.EQUALS;
+      }
+
+      @Override
+      public String toString() {
+        return getExp1() + " EQUALS " + getExp2();
+      }
+
+      @Override
+      public void accept(QueryExpressionVisitor v) {
+        v.visit(this);
+      }
+    }
+
+    class Precedes extends BinaryExpression implements RelationalExpression {
+      boolean immediately = false;
+
+      public Precedes(QueryExpression exp1, QueryExpression exp2) {
+        super(exp1, exp2);
+      }
+
+      public Precedes(QueryExpression exp1, QueryExpression exp2, boolean immediately) {
+        super(exp1, exp2);
+        this.immediately = immediately;
+      }
+
+      public boolean isImmediately() {
+        return immediately;
+      }
+
+      public void setImmediately(boolean immediately) {
+        this.immediately = immediately;
+      }
+
+      @Override
+      public ExpressionType getExpType() {
+        return ExpressionType.PRECEDES;
+      }
+
+      @Override
+      public String toString() {
+        return getExp1() + (immediately ? "IMMEDIATELY " : "") + " PRECEDES " + getExp2();
+      }
+
+      @Override
+      public void accept(QueryExpressionVisitor v) {
+        v.visit(this);
+      }
+    }
+
+    class Succeeds extends BinaryExpression implements RelationalExpression {
+      boolean immediately = false;
+
+      public Succeeds(QueryExpression exp1, QueryExpression exp2) {
+        super(exp1, exp2);
+      }
+
+      public Succeeds(QueryExpression exp1, QueryExpression exp2, boolean immediately) {
+        super(exp1, exp2);
+        this.immediately = immediately;
+      }
+
+      public boolean isImmediately() {
+        return immediately;
+      }
+
+      public void setImmediately(boolean immediately) {
+        this.immediately = immediately;
+      }
+
+      @Override
+      public ExpressionType getExpType() {
+        return ExpressionType.SUCCEEDS;
+      }
+
+      @Override
+      public String toString() {
+        return getExp1() + (immediately ? "IMMEDIATELY " : "") + " SUCCEEDS " + getExp2();
+      }
+
+      @Override
+      public void accept(QueryExpressionVisitor v) {
+        v.visit(this);
+      }
+    }
+
+    class Contains extends BinaryExpression implements RelationalExpression {
+
+      public Contains(QueryExpression exp1, QueryExpression exp2) {
+        super(exp1, exp2);
+      }
+
+      @Override
+      public ExpressionType getExpType() {
+        return ExpressionType.CONTAINS;
+      }
+
+      @Override
+      public String toString() {
+        return getExp1() + " CONTAINS " + getExp2();
       }
 
       @Override

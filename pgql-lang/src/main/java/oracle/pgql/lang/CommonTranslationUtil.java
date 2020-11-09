@@ -62,6 +62,9 @@ public class CommonTranslationUtil {
 
   private static final int POS_BINARY_EXP_LEFT = 0;
   private static final int POS_BINARY_EXP_RIGHT = 1;
+  private static final int POS_TERNARY_EXP_LEFT = 0;
+  private static final int POS_TERNARY_EXP_MIDDLE = 1;
+  private static final int POS_TERNARY_EXP_RIGHT = 2;
   private static final int POS_UNARY_EXP = 0;
   private static final int POS_AGGREGATE_DISTINCT = 0;
   private static final int POS_AGGREGATE_EXP = 1;
@@ -289,6 +292,30 @@ public class CommonTranslationUtil {
         IStrategoAppl timePropRefT = (IStrategoAppl) t.getSubterm(POS_ELEMTIME_TIMEPROP);
         TimeProperty timePropTy2 = TimeProperty.valueOf(timePropRefT.getName());
         return new QueryExpression.ElemTimeAccess(varRef2.getVariable(), timePropTy2);
+      case "Overlaps":
+        exp1 = translateExp(t.getSubterm(POS_BINARY_EXP_LEFT), ctx);
+        exp2 = translateExp(t.getSubterm(POS_BINARY_EXP_RIGHT), ctx);
+        return new QueryExpression.RelationalExpression.Overlaps(exp1, exp2);
+      case "Equals":
+        exp1 = translateExp(t.getSubterm(POS_BINARY_EXP_LEFT), ctx);
+        exp2 = translateExp(t.getSubterm(POS_BINARY_EXP_RIGHT), ctx);
+        return new QueryExpression.RelationalExpression.Equals(exp1, exp2);
+      case "Precedes":
+        exp1 = translateExp(t.getSubterm(POS_TERNARY_EXP_LEFT), ctx);
+        boolean isImmediately = !isNone(t.getSubterm(POS_TERNARY_EXP_MIDDLE)) &&
+          getConstructorName(getSome(t.getSubterm(POS_TERNARY_EXP_MIDDLE))).equals("Immediately");
+        QueryExpression exp3 = translateExp(t.getSubterm(POS_TERNARY_EXP_RIGHT), ctx);
+        return new QueryExpression.RelationalExpression.Precedes(exp1, exp3, isImmediately);
+      case "Succeeds":
+        exp1 = translateExp(t.getSubterm(POS_TERNARY_EXP_LEFT), ctx);
+        isImmediately = !isNone(t.getSubterm(POS_TERNARY_EXP_MIDDLE)) &&
+          getConstructorName(getSome(t.getSubterm(POS_TERNARY_EXP_MIDDLE))).equals("Immediately");
+        exp3 = translateExp(t.getSubterm(POS_TERNARY_EXP_RIGHT), ctx);
+        return new QueryExpression.RelationalExpression.Succeeds(exp1, exp3, isImmediately);
+      case "Contains":
+        exp1 = translateExp(t.getSubterm(POS_BINARY_EXP_LEFT), ctx);
+        exp2 = translateExp(t.getSubterm(POS_BINARY_EXP_RIGHT), ctx);
+        return new QueryExpression.RelationalExpression.Contains(exp1, exp2);
       case "Cast":
         exp = translateExp(t.getSubterm(POS_CAST_EXP), ctx);
         String targetTypeName = getString(t.getSubterm(POS_CAST_TARGET_TYPE_NAME));
@@ -348,19 +375,17 @@ public class CommonTranslationUtil {
         exp = translateExp(periodExpT, ctx);
         // We receive t.getSubterm(0) as Some(TimeUnitOption(TimeUnit({theUnit}))) if the unit is given
         // None() if it is not given
-        IStrategoAppl unitT = (IStrategoAppl) t.getSubterm(0);
+        IStrategoTerm unitT = t.getSubterm(POS_PERIOD_LENGTH_UNIT);
 
-        if (unitT.getConstructor().getName().equals("None")) {
+        if (isNone(unitT)) {
           // No time unit is given, use default
           return new PeriodLengthExpression(exp);
         }
         // A time unit is given
-        unitT = (IStrategoAppl) unitT
-          .getSubterm(POS_PERIOD_LENGTH_UNIT) // To access the optional
-          .getSubterm(0); // To get the unit literal
+        unitT = getSome(unitT).getSubterm(0); // To get the unit literal
 
         TimeUnit unit;
-        switch (unitT.getConstructor().getName()) {
+        switch (getConstructorName(unitT)) {
         case "Year":
           unit = TimeUnit.YEAR;
           break;
@@ -396,9 +421,9 @@ public class CommonTranslationUtil {
         }
         return new PeriodLengthExpression(unit, exp);
       case "Period" :
-        QueryExpression expP1 = translateExp(t.getSubterm(POS_PERIOD_BEGINNING_BOUND_EXP), ctx);
-        QueryExpression expP2 = translateExp(t.getSubterm(POS_PERIOD_ENDING_BOUND_EXP), ctx);
-        return new Period(expP1, expP2);
+        exp1 = translateExp(t.getSubterm(POS_BINARY_EXP_LEFT), ctx);
+        exp2 = translateExp(t.getSubterm(POS_BINARY_EXP_RIGHT), ctx);
+        return new Period(exp1, exp2);
       case "InPredicate":
         expT = t.getSubterm(POS_IN_PREDICATE_EXP);
         exp = translateExp(expT, ctx);
@@ -412,7 +437,7 @@ public class CommonTranslationUtil {
       case "IfElse":
         exp1 = translateExp(t.getSubterm(POS_IF_ELSE_EXP1), ctx);
         exp2 = translateExp(t.getSubterm(POS_IF_ELSE_EXP2), ctx);
-        QueryExpression exp3 = translateExp(t.getSubterm(POS_IF_ELSE_EXP3), ctx);
+        exp3 = translateExp(t.getSubterm(POS_IF_ELSE_EXP3), ctx);
         return new IfElse(exp1, exp2, exp3);
       case "SimpleCase":
         QueryExpression operandExp = translateExp(t.getSubterm(POS_SIMPLE_CASE_OPERAND), ctx);

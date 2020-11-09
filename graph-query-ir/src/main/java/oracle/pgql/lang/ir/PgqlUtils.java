@@ -51,7 +51,7 @@ public class PgqlUtils {
   // make sure to keep in sync with list of reserved words in pgql-spoofax/syntax/Names.sdf3
   private final static Set<String> RESERVED_WORDS = new HashSet<>(
       Arrays.asList("true", "false", "null", "not", "distinct", "tx_time", "val_time", "val_from", "val_to",
-        "tx_from", "tx_to"));
+        "tx_from", "tx_to", "overlaps", "precedes", "succeeds", "contains", "immediately", "period"));
 
   static DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.#");
 
@@ -96,6 +96,7 @@ public class PgqlUtils {
           visit(elemTimeAccess);
         }
       }
+
       @Override
       public void visit(PropTimeAccess propTimeAccess) {
         result.add(propTimeAccess.getPropertyAccess().getVariable());
