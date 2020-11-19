@@ -18,11 +18,11 @@ cd ../
 rm -rf tmp
 mkdir tmp
 cd tmp
-unzip ../pgql-spoofax/target/pgqllang-1.3.0-SNAPSHOT.spoofax-language
-rm ../pgql-spoofax/target/pgqllang-1.3.0-SNAPSHOT.spoofax-language
+unzip ../pgql-spoofax/target/pgqllang-1.3.1-SNAPSHOT.spoofax-language
+rm ../pgql-spoofax/target/pgqllang-1.3.1-SNAPSHOT.spoofax-language
 rm target/metaborg/stratego.jar # all strategies are already inside stratego-javastrat.jar
 sed -i.bak 's/, SemanticProvider("target\/metaborg\/stratego.jar")//g' target/metaborg/editor.esv.af
-zip -r ../pgql-spoofax/target/pgqllang-1.3.0-SNAPSHOT.spoofax-language *
+zip -r ../pgql-spoofax/target/pgqllang-1.3.1-SNAPSHOT.spoofax-language *
 cd ../
 
 cd graph-query-ir/; mvn clean install; cd ../
@@ -30,7 +30,7 @@ cd graph-query-ir/; mvn clean install; cd ../
 cd pgql-lang/
 mkdir -p src/main/resources/
 rm -f src/main/resources/*.spoofax-language # remove any spoofax binaries from previous builds
-cp ../pgql-spoofax/target/pgqllang-1.3.0-SNAPSHOT.spoofax-language src/main/resources/pgql.spoofax-language
+cp ../pgql-spoofax/target/pgqllang-1.3.1-SNAPSHOT.spoofax-language src/main/resources/pgql.spoofax-language
 mvn clean install
 cd ../
 
